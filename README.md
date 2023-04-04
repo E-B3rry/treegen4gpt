@@ -16,13 +16,13 @@ TreeGen4Gpt is a handy tool designed to generate templates for programming proje
 TreeGen4Gpt can be used with or without the GUI. To run the script without the GUI, use the `--cli` command-line argument. You can also specify the working directory using the `--dir` argument.
 
 ```bash
-python main.py --cli --dir /path/to/your/project
+python treegen4gpt.py --cli --dir /path/to/your/project
 ```
 
 To run the script with the GUI, simply execute the script without any arguments:
 
 ```bash
-python main.py
+python treegen4gpt.py
 ```
 
 ## Installation
