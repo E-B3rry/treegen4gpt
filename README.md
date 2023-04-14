@@ -1,4 +1,4 @@
-# TreeGen4Gpt (v0.0.1-alpha)
+# TreeGen4Gpt (v0.1.0-alpha)
 
 TreeGen4Gpt is a handy tool designed to generate templates for programming projects, making it easier to transfer the project structure and content to GPT-4 or other AI models and streamlining the process. Initially created for Python projects, TreeGen4Gpt aims to support various programming languages in the future, making it a useful addition to any developer's toolkit.
 

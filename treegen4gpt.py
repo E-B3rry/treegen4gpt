@@ -11,7 +11,7 @@ from tkinter import Tk, ttk, Frame, Scrollbar, Text, Button, messagebox, Label, 
 from tkinter.constants import *
 
 
-__version__ = "0.0.1-alpha"
+__version__ = "0.1.0-alpha"
 
 
 DEFAULT_IGNORED_FOLDERS = {".git", ".idea", "__pycache__", "venv", "img", "assessment"}
@@ -56,6 +56,7 @@ def remove_comments_and_docstrings(code: str) -> str:
     prev_toktype = tokenize.INDENT
     last_lineno = -1
     last_col = 0
+    newline_pending = False
 
     for tok in tokenize.generate_tokens(code_io.readline):
         token_type = tok.type
@@ -64,15 +65,20 @@ def remove_comments_and_docstrings(code: str) -> str:
         end_line, end_col = tok.end
 
         if start_line > last_lineno:
+            if newline_pending:
+                newline_pending = False
+            elif prev_toktype not in (tokenize.COMMENT, tokenize.INDENT):
+                clean_code_lines.append("\n")
             last_col = 0
-        if start_col > last_col:
+
+        if start_col > last_col and token_type not in (tokenize.COMMENT, tokenize.NL, tokenize.NEWLINE):
             clean_code_lines.append(" " * (start_col - last_col))
 
         if token_type == tokenize.COMMENT:
-            pass
+            if prev_toktype == tokenize.NL or prev_toktype == tokenize.NEWLINE:
+                newline_pending = True
         elif token_type == tokenize.STRING:
             if prev_toktype != tokenize.INDENT:
-                # The triple-quoted string is not a docstring, so include it
                 if token_string[:3] not in ('"""', "'''"):
                     clean_code_lines.append(token_string)
         else:
@@ -128,7 +134,7 @@ def remove_extra_line_jumps(code: str) -> str:
     :param code: A string containing the code.
     :return: A string with extra line jumps removed.
     """
-    code = re.sub(r'\n{3,}', '\n\n', code)
+    code = re.sub(r'\n{2,}', '\n', code)
     return code
 
 
@@ -169,7 +175,7 @@ def write_template(description: str, arborescence: str, selected_files: Dict[Pat
         if remove_comments[file]:
             content = remove_comments_and_docstrings(content)
 
-        content = remove_extra_line_jumps(content)
+        content = remove_extra_line_jumps(content).strip('\n')
 
         arborescence = arborescence.replace(f"- {file.name}\n", f"- {file.name}\n```py\n{content}\n```\n")
 
@@ -702,6 +708,7 @@ def run_cli():
     """
     saved_settings = load_settings()
 
+    use_saved_settings = 'n'
     if saved_settings:
         use_saved_settings = prompt_user(f"Do you want to use the saved settings? (y/n): ")
         if use_saved_settings == 'y':
@@ -716,9 +723,10 @@ def run_cli():
 
     write_template(description, arborescence, selected_files, remove_comments, remove_functions)
 
-    save_choice = prompt_user("Do you want to save these settings? (y/n): ")
-    if save_choice == 'y':
-        save_settings(description, selected_files, remove_comments, remove_functions, ignored_folders, ignored_files)
+    if not (saved_settings and use_saved_settings == 'y'):
+        save_choice = prompt_user("Do you want to save these settings? (y/n): ")
+        if save_choice == 'y':
+            save_settings(description, selected_files, remove_comments, remove_functions, ignored_folders, ignored_files)
 
 
 def main():
